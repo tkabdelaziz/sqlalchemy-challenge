@@ -43,8 +43,8 @@ def home():
         f"/api/v1.0/precipitation</br>"
         f"/api/v1.0/stations</br>"
         f"/api/v1.0/tobs </br>"
-        f"/api/v1.0/start </br>"
-        f"/api/v1.0/start/end </br>"
+        f"/api/v1.0/start **start in the format of %Y-%m-%d</br>"
+        f"/api/v1.0/start/end **start and end in format of %Y-%m-%d</br>"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -106,9 +106,39 @@ def get_tobs():
 
     return jsonify(all_tobs)
 
-#@app.route("/api/v1.0/start")
+@app.route("/api/v1.0/<start>")
+# Return a JSON list of the minimum temperature, the average temperature, and the max temperature for a given start
+def get_start_temp(start):
+    # Create our session (link) from Python to the DB
+    session = Session(engine)
 
-#@app.route("//api/v1.0/start/end")
+    # Query min, avg, max temp
+    results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+        filter(Measurement.date >= start).all()
+
+    session.close()
+
+    # Convert list of tuples into normal list
+    start_temp = list(np.ravel(results))
+
+    return jsonify(start_temp)
+
+@app.route("/api/v1.0/<start>/<end>")
+# Return a JSON list of the minimum temperature, the average temperature, and the max temperature for a givenstart-end range'
+def get_start_end_temp(start,end):
+# Create our session (link) from Python to the DB
+    session = Session(engine)
+
+    # Query min, avg, max temp
+    results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+        filter(Measurement.date >= start).filter(Measurement.date <= end).all()
+
+    session.close()
+
+    # Convert list of tuples into normal list
+    start_end_temp = list(np.ravel(results))
+
+    return jsonify(start_end_temp)
 
 
 if __name__ == '__main__':
